@@ -7,19 +7,19 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 fun Application.configureRouting() {
-
-    val baseUrl = "https://by.wildberries.ru/catalog/"
-    val end = "/detail.aspx?targetUrl=XS"
+    val api = "/api"
 
     routing {
-        get(path = "/{bookId}") {
-            val doc: Document = Jsoup.connect("$baseUrl${call.parameters["bookId"]}$end").get()
-            val title: String = doc.select("span[data-link=\"text{:productCard^goodsName}\"]").text()
-            val price: String = doc.select("span[class=\"price-block__final-price\"]")[0].text().removeSuffix(" ₽").replace(" ", "")
+        get(path = "$api/book={bookName}") {
+            val searchPage: Document = Jsoup.connect("https://yandex.by/search/?text=${call.parameters["bookName"]}+вайлдберриз").get()
+            val bookUrl = searchPage.select("a[class=\"Link Link_theme_outer Path-Item link path__item organic__greenurl\"]")[0].attr("href")
+            val bookPage: Document = Jsoup.connect("$bookUrl").get()
+            val title: String = bookPage.select("span[data-link=\"text{:productCard^goodsName}\"]").text()
+            val price: String = bookPage.select("span[class=\"price-block__commission-current-price\"]")[0].text().removeSuffix(" ₽").replace(" ", "")
             call.respondText("{title: \"$title\", price: $price}")
         }
         get("/") {
-            call.respondText("Hello World! To use this API, add wildberries goods id after slash")
+            call.respondText("Hello World! To use this API, see documentation in source code.")
         }
     }
 }
