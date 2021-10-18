@@ -1,8 +1,12 @@
 package com.example.plugins
 
+import com.example.plugins.retrofit.api.BankApiImplementation
 import io.ktor.routing.*
 import io.ktor.application.*
 import io.ktor.response.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -12,11 +16,12 @@ fun Application.configureRouting() {
 
     fun Element.getBelarusianPrice(): Double? = text().substringBefore(" ").replace(',','.').toDoubleOrNull()
 
-    fun String.getHTML(): Document = Jsoup.connect(this).userAgent("Mozilla/5.0 (Linux; Android 10; Redmi Note 7 Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/89.0.4389.105 Mobile Safari/537.36 GSA/12.10.7.23.arm64").get()
+    fun String.getHTML(): Document = Jsoup.connect(this)
+        .userAgent("Mozilla/5.0 (Linux; Android 10; Redmi Note 7 Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/89.0.4389.105 Mobile Safari/537.36 GSA/12.10.7.23.arm64")
+        .get()
 
     val api = "/api"
 
-    val NOT_PRESENTED = 999999999
     val NOT_PRESENTED_DOUBLE = 999999999.0
 
     routing {
@@ -35,15 +40,17 @@ fun Application.configureRouting() {
             val pricesLabirint = labirint.select("span[class=\"price-val\"]")
             val priceLabirint =
                 if (pricesLabirint.isNotEmpty()) {
-                    pricesLabirint
-                        .map { it.text().substringBefore(" ₽").replace(" ", "").toIntOrNull() }
-                        .minOf { it ?: NOT_PRESENTED }
-                } else { NOT_PRESENTED }
+                    val priceInRussian =
+                        pricesLabirint
+                        .map { it.text().substringBefore(" ₽").replace(" ", "").toDoubleOrNull() }
+                        .minOf { it ?: NOT_PRESENTED_DOUBLE }
+                    priceInRussian * BankApiImplementation.getCurs()
+                } else { NOT_PRESENTED_DOUBLE }
 
             val jsonParams = HashMap<String, Any?>()
             jsonParams["bookName"] = bookName
             if (priceOz != NOT_PRESENTED_DOUBLE) jsonParams["priceOz"] = priceOz
-            if (priceLabirint != NOT_PRESENTED) jsonParams["priceLabirint:"] = priceLabirint
+            if (priceLabirint != NOT_PRESENTED_DOUBLE) jsonParams["priceLabirint:"] = priceLabirint
             call.respondText(JSONObject(jsonParams).toString())
         }
         get("/") {
