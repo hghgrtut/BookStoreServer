@@ -1,6 +1,6 @@
-package com.example.plugins.retrofit.api
+package com.example.retrofit.api
 
-import com.example.plugins.retrofit.data.BankApiData
+import com.example.retrofit.data.BankApiData
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.GET
