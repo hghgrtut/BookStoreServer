@@ -17,6 +17,8 @@ internal fun Document.getText(tag: String) = selectLimited(tag).map { it.text() 
 
 internal fun Document.getPictures(tag: String) = selectLimited(tag).map { it.attr("data-src") }
 
+internal fun Document.getPicturesSrc(tag: String) = selectLimited(tag).map { it.attr("abs:src") }
+
 internal fun Document.getRefs(linkTag: String) = selectLimited(linkTag).map { it.attr("abs:href") }
 
 internal fun Document.selectLimited(tag: String) = select(tag).asIterable().take(MAX_BOOKS_PER_PARSER)
