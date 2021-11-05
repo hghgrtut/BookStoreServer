@@ -1,20 +1,20 @@
 package com.example.server.parsers.concrete
 
-import com.example.retrofit.api.BankApiImplementation
 import com.example.server.parsers.*
-import com.example.server.parsers.LABIRINT
 import com.example.server.parsers.getHTML
 import com.example.server.parsers.getRefs
 
-object LabirintParser : Parser() {
-    override suspend fun parse(bookName: String): ParseObject? {
-        val labirint = "https://www.labirint.ru/search/$bookName/?stype=0".getHTML()
-        if (labirint.select("div[class=\"search-error\"]").isNotEmpty()) return null
+class LabirintParser(private val currencyRate: Double) : Parser() {
+    override suspend fun parse(bookName: String): List<ParseObject> {
+        val html = "https://www.labirint.ru/search/$bookName/?stype=0".getHTML()
 
-        val prices = labirint.select("span[class=\"price-val\"]")
-            .map { it.text().substringBefore(" ₽").replace(" ", "").toDoubleOrNull() ?: Double.MAX_VALUE }
-            .toDoubleArray()
-        val refs = labirint.select("a[class=\"product-title-link\"]").getRefs()
-        return cheapest(prices, refs, LABIRINT, BankApiImplementation.getCurs())
+        if (html.select("div[class=\"search-error\"]").isNotEmpty()) return emptyList()
+
+        val prices = html.getPrices("span[class=\"price-val\"]", currencyRate)
+        val links = html.getRefs("a[class=\"product-title-link\"]")
+        val authors = html.getText("div[class=\"product-author\"]")
+        val titles = html.getText("span[class=\"product-title\"]")
+        val pictures = html.getPictures("img[class=\"book-img-cover\"]")
+        return List (prices.size) { i -> ParseObject(prices[i], links[i], authors[i], titles[i], pictures[i]) }
     }
 }

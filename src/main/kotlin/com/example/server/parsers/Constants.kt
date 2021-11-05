@@ -4,3 +4,4 @@ internal val USER_AGENT = "Mozilla/5.0 (Linux; Android 10; Redmi Note 7 Build/QK
 // Shops
 internal val LABIRINT = "Labirint"
 internal val OZ = "Oz"
+internal val PITER = "Питер"
