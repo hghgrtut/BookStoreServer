@@ -11,7 +11,7 @@ object Server {
     suspend fun getPrices(bookName: String): String {
         val results: MutableList<ParseObject> = mutableListOf()
         val curs = BankApiImplementation.getCurs()
-        listOf<Parser>(AlpinaParser(curs), BhvParser(curs), LabirintParser(curs), OzParser, PiterParser(curs)).forEach {
+        listOf<Parser>(LabirintParser(curs), OzParser, PiterParser(curs)).forEach {
             results.addAll(it.parse(bookName))
         }
         return Gson().toJson(results)
